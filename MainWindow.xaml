@@ -1,0 +1,247 @@
+<Window x:Class="WpfApp3.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:WpfApp3"
+        mc:Ignorable="d"
+        Title="桌面壁纸设置工具" Height="600" Width="900" 
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="CanResize"
+        MinHeight="500" MinWidth="700">
+    
+    <Grid Background="#F5F5F5">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        
+        <!-- 标题栏 -->
+        <Border Grid.Row="0" Background="#2C3E50" Padding="20,15">
+            <TextBlock Text="桌面壁纸设置工具" 
+                       FontSize="24" 
+                       FontWeight="Bold" 
+                       Foreground="White" 
+                       HorizontalAlignment="Center"/>
+        </Border>
+        
+        <!-- 主内容区域 -->
+        <Grid Grid.Row="1" Margin="20">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="20"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            
+            <!-- 媒体预览区域 -->
+            <Border Grid.Column="0" 
+                    Background="White" 
+                    BorderBrush="#BDC3C7" 
+                    BorderThickness="2" 
+                    CornerRadius="10">
+                <Grid>
+                    <TextBlock x:Name="PlaceholderText"
+                               Text="选择媒体类型，然后点击按钮来选择壁纸文件"
+                               FontSize="16"
+                               Foreground="#7F8C8D"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               TextWrapping="Wrap"/>
+                    
+                    <!-- 图片预览 -->
+                    <Image x:Name="PreviewImage"
+                           Stretch="Uniform"
+                           Margin="10"
+                           Visibility="Collapsed"/>
+                    
+                    <!-- 视频预览 -->
+                    <MediaElement x:Name="PreviewVideo"
+                                  Stretch="Uniform"
+                                  Margin="10"
+                                  Visibility="Collapsed"
+                                  LoadedBehavior="Manual"
+                                  UnloadedBehavior="Manual"
+                                  IsMuted="True"
+                                  MediaEnded="PreviewVideo_MediaEnded"/>
+                    
+                    <!-- 视频控制面板 -->
+                    <StackPanel x:Name="VideoControls"
+                                Orientation="Horizontal"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Bottom"
+                                Background="#80000000"
+                                Margin="10"
+                                Visibility="Collapsed">
+                        <Button x:Name="PlayPauseButton"
+                                Content="▶"
+                                Width="40"
+                                Height="30"
+                                Margin="5"
+                                Background="#3498DB"
+                                Foreground="White"
+                                BorderThickness="0"
+                                Click="PlayPauseButton_Click"/>
+                        <Button x:Name="StopButton"
+                                Content="⏹"
+                                Width="40"
+                                Height="30"
+                                Margin="5"
+                                Background="#E74C3C"
+                                Foreground="White"
+                                BorderThickness="0"
+                                Click="StopButton_Click"/>
+                        <TextBlock Text="音量:"
+                                   VerticalAlignment="Center"
+                                   Foreground="White"
+                                   Margin="10,0,5,0"/>
+                        <Slider x:Name="VolumeSlider"
+                                Width="80"
+                                Minimum="0"
+                                Maximum="1"
+                                Value="0.5"
+                                VerticalAlignment="Center"
+                                ValueChanged="VolumeSlider_ValueChanged"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+            
+            <!-- 控制面板 -->
+            <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                
+                <!-- 媒体类型选择 -->
+                <GroupBox Header="媒体类型" 
+                          FontSize="14" 
+                          FontWeight="Bold" 
+                          Margin="0,0,0,20"
+                          Padding="10">
+                    <StackPanel>
+                        <RadioButton x:Name="ImageRadioButton"
+                                     Content="图片壁纸"
+                                     FontSize="12"
+                                     IsChecked="True"
+                                     Margin="0,5"
+                                     Checked="MediaType_Changed"/>
+                        <RadioButton x:Name="VideoRadioButton"
+                                     Content="视频壁纸"
+                                     FontSize="12"
+                                     Margin="0,5"
+                                     Checked="MediaType_Changed"/>
+                    </StackPanel>
+                </GroupBox>
+                
+                <!-- 选择文件按钮 -->
+                <Button x:Name="SelectMediaButton"
+                        Content="选择图片"
+                        Height="50"
+                        FontSize="16"
+                        FontWeight="Bold"
+                        Background="#3498DB"
+                        Foreground="White"
+                        BorderThickness="0"
+                        Cursor="Hand"
+                        Margin="0,0,0,15"
+                        Click="SelectMediaButton_Click">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="{TemplateBinding Background}"
+                                                CornerRadius="8"
+                                                BorderThickness="{TemplateBinding BorderThickness}"
+                                                BorderBrush="{TemplateBinding BorderBrush}">
+                                            <ContentPresenter HorizontalAlignment="Center"
+                                                            VerticalAlignment="Center"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter Property="Background" Value="#2980B9"/>
+                                            </Trigger>
+                                            <Trigger Property="IsPressed" Value="True">
+                                                <Setter Property="Background" Value="#21618C"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </Button.Style>
+                </Button>
+                
+                <!-- 设置壁纸按钮 -->
+                <Button x:Name="SetWallpaperButton"
+                        Content="设置为壁纸"
+                        Height="50"
+                        FontSize="16"
+                        FontWeight="Bold"
+                        Background="#27AE60"
+                        Foreground="White"
+                        BorderThickness="0"
+                        Cursor="Hand"
+                        IsEnabled="False"
+                        Margin="0,0,0,15"
+                        Click="SetWallpaperButton_Click">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="{TemplateBinding Background}"
+                                                CornerRadius="8"
+                                                BorderThickness="{TemplateBinding BorderThickness}"
+                                                BorderBrush="{TemplateBinding BorderBrush}">
+                                            <ContentPresenter HorizontalAlignment="Center"
+                                                            VerticalAlignment="Center"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter Property="Background" Value="#229954"/>
+                                            </Trigger>
+                                            <Trigger Property="IsPressed" Value="True">
+                                                <Setter Property="Background" Value="#1E8449"/>
+                                            </Trigger>
+                                            <Trigger Property="IsEnabled" Value="False">
+                                                <Setter Property="Background" Value="#95A5A6"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </Button.Style>
+                </Button>
+                
+                <!-- 图片信息显示 -->
+                <Border Background="White" 
+                        BorderBrush="#BDC3C7" 
+                        BorderThickness="1" 
+                        CornerRadius="5" 
+                        Padding="15">
+                    <StackPanel>
+                        <TextBlock Text="图片信息" 
+                                   FontWeight="Bold" 
+                                   FontSize="14" 
+                                   Margin="0,0,0,10"/>
+                        
+                        <TextBlock x:Name="ImageInfoText"
+                                   Text="未选择图片"
+                                   FontSize="12"
+                                   Foreground="#7F8C8D"
+                                   TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+                
+            </StackPanel>
+        </Grid>
+        
+        <!-- 状态栏 -->
+        <Border Grid.Row="2" Background="#34495E" Padding="15,10">
+            <TextBlock x:Name="StatusText"
+                       Text="就绪"
+                       Foreground="White"
+                       FontSize="12"/>
+        </Border>
+        
+    </Grid>
+</Window>
