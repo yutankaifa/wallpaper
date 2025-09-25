@@ -14,7 +14,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>  
         </Grid.RowDefinitions>
         
         <!-- 标题栏 -->
@@ -189,7 +189,7 @@
                                     <ControlTemplate TargetType="Button">
                                         <Border Background="{TemplateBinding Background}"
                                                 CornerRadius="8"
-                                                BorderThickness="{TemplateBinding BorderThickness}"
+                                                 BorderThickness="{TemplateBinding BorderThickness}"
                                                 BorderBrush="{TemplateBinding BorderBrush}">
                                             <ContentPresenter HorizontalAlignment="Center"
                                                             VerticalAlignment="Center"/>
