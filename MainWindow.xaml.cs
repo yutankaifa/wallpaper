@@ -34,9 +34,27 @@ namespace WpfApp3
     [DllImport("user32.dll")]
     private static extern IntPtr GetDesktopWindow();
 
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
+
+    [DllImport("user32.dll")]
+    private static extern bool EnumWindows(EnumWindowsProc enumProc, IntPtr lParam);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern IntPtr FindWindowEx(IntPtr hwndParent, IntPtr hwndChildAfter, string lpszClass, string lpszWindow);
+
+    // 委托定义
+    public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
+
     private const int SPI_SETDESKWALLPAPER = 20;
     private const int SPIF_UPDATEINIFILE = 0x01;
     private const int SPIF_SENDCHANGE = 0x02;
+    
+    // SetWindowPos 常量
+    private static readonly IntPtr HWND_BOTTOM = new IntPtr(1);
+    private const uint SWP_NOMOVE = 0x0002;
+    private const uint SWP_NOSIZE = 0x0001;
+    private const uint SWP_NOACTIVATE = 0x0010;
 
     public MainWindow()
     {
@@ -455,18 +473,22 @@ namespace WpfApp3
         // 注意：真正的动态视频壁纸需要第三方软件支持
         // 这里我们提供一个基础实现，实际使用可能需要Wallpaper Engine等软件
 
-        // 创建一个隐藏的视频播放窗口
+        // 获取工作区域（排除任务栏）
+        var workingArea = SystemParameters.WorkArea;
+        
+        // 创建一个视频播放窗口
         var videoWindow = new Window
         {
           WindowStyle = WindowStyle.None,
           ResizeMode = ResizeMode.NoResize,
           ShowInTaskbar = false,
           Topmost = false,
-          Left = 0,
-          Top = 0,
-          Width = SystemParameters.PrimaryScreenWidth,
-          Height = SystemParameters.PrimaryScreenHeight,
-          Background = Brushes.Black
+          Left = workingArea.Left,
+          Top = workingArea.Top,
+          Width = workingArea.Width,
+          Height = workingArea.Height,
+          Background = Brushes.Black,
+          AllowsTransparency = false
         };
 
         var videoElement = new MediaElement
@@ -488,9 +510,38 @@ namespace WpfApp3
         videoWindow.Show();
         videoElement.Play();
 
-        // 将窗口设置到桌面背景层
-        IntPtr desktopHandle = GetDesktopWindow();
+        // 获取窗口句柄
         IntPtr windowHandle = new System.Windows.Interop.WindowInteropHelper(videoWindow).Handle;
+        
+        // 找到桌面窗口和Program Manager窗口
+        IntPtr progmanHandle = FindWindow("Progman", string.Empty);
+        IntPtr workerWHandle = IntPtr.Zero;
+        
+        // 发送消息给Program Manager以分离桌面
+        SendMessage(progmanHandle, 0x052C, IntPtr.Zero, IntPtr.Zero);
+        
+        // 查找WorkerW窗口
+        EnumWindows((hwnd, lParam) =>
+        {
+          IntPtr shellDllDefView = FindWindowEx(hwnd, IntPtr.Zero, "SHELLDLL_DefView", string.Empty);
+          if (shellDllDefView != IntPtr.Zero)
+          {
+            workerWHandle = FindWindowEx(IntPtr.Zero, hwnd, "WorkerW", string.Empty);
+          }
+          return true;
+        }, IntPtr.Zero);
+        
+        // 将视频窗口设置为WorkerW的子窗口，这样它就会显示在桌面壁纸层
+        if (workerWHandle != IntPtr.Zero)
+        {
+          SetParent(windowHandle, workerWHandle);
+        }
+        else
+        {
+          // 如果找不到WorkerW，则将窗口置于最底层
+          SetWindowPos(windowHandle, HWND_BOTTOM, 0, 0, 0, 0, 
+                      SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+        }
 
         // 这是一个简化的实现，真正的动态壁纸需要更复杂的系统集成
         UpdateStatus("动态壁纸设置完成！");
