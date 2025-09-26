@@ -71,7 +71,7 @@ namespace WpfApp3
       UpdateStatus("应用程序已启动，请选择媒体文件");
     }
 
-    private void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+    private void MainWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
     {
       // 应用程序关闭时清理视频壁纸
       CleanupVideoWallpaper();
