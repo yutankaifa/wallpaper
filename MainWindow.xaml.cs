@@ -16,6 +16,9 @@ namespace WpfApp3
     private string? selectedMediaPath;
     private bool isVideoMode = false;
     private bool isVideoPlaying = false;
+    
+    // 视频壁纸窗口跟踪
+    private Window? currentVideoWallpaperWindow = null;
 
     // Windows API 用于设置壁纸
     [DllImport("user32.dll", CharSet = CharSet.Auto)]
@@ -60,11 +63,18 @@ namespace WpfApp3
     {
       InitializeComponent();
       Loaded += MainWindow_Loaded;
+      Closing += MainWindow_Closing;
     }
 
     private void MainWindow_Loaded(object sender, RoutedEventArgs e)
     {
       UpdateStatus("应用程序已启动，请选择媒体文件");
+    }
+
+    private void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+    {
+      // 应用程序关闭时清理视频壁纸
+      CleanupVideoWallpaper();
     }
 
     /// <summary>
@@ -447,6 +457,9 @@ namespace WpfApp3
     /// </summary>
     private void SetImageWallpaper(string imagePath)
     {
+      // 先清理之前的视频壁纸
+      CleanupVideoWallpaper();
+      
       // 调用Windows API设置壁纸
       int result = SystemParametersInfo(SPI_SETDESKWALLPAPER, 0, imagePath,
           SPIF_UPDATEINIFILE | SPIF_SENDCHANGE);
@@ -470,6 +483,9 @@ namespace WpfApp3
     {
       try
       {
+        // 先清理之前的视频壁纸
+        CleanupVideoWallpaper();
+        
         // 注意：真正的动态视频壁纸需要第三方软件支持
         // 这里我们提供一个基础实现，实际使用可能需要Wallpaper Engine等软件
 
@@ -509,6 +525,9 @@ namespace WpfApp3
         videoWindow.Content = videoElement;
         videoWindow.Show();
         videoElement.Play();
+        
+        // 保存视频窗口引用以便后续清理
+        currentVideoWallpaperWindow = videoWindow;
 
         // 获取窗口句柄
         IntPtr windowHandle = new System.Windows.Interop.WindowInteropHelper(videoWindow).Handle;
@@ -592,6 +611,30 @@ namespace WpfApp3
       if (StatusText != null)
       {
         StatusText.Text = $"{DateTime.Now:HH:mm:ss} - {message}";
+      }
+    }
+
+    /// <summary>
+    /// 清理当前的视频壁纸窗口
+    /// </summary>
+    private void CleanupVideoWallpaper()
+    {
+      if (currentVideoWallpaperWindow != null)
+      {
+        try
+        {
+          // 关闭视频壁纸窗口
+          currentVideoWallpaperWindow.Close();
+          UpdateStatus("已清理之前的视频壁纸");
+        }
+        catch (Exception ex)
+        {
+          UpdateStatus($"清理视频壁纸时出现警告: {ex.Message}");
+        }
+        finally
+        {
+          currentVideoWallpaperWindow = null;
+        }
       }
     }
 
